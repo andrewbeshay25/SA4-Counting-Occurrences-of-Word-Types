@@ -1,0 +1,3 @@
+C:/Users/andre/OneDrive/Documents/Spring 2025/CS280/SA/SA4/cmake-build-debug/CMakeFiles/SA4.dir
+C:/Users/andre/OneDrive/Documents/Spring 2025/CS280/SA/SA4/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/andre/OneDrive/Documents/Spring 2025/CS280/SA/SA4/cmake-build-debug/CMakeFiles/rebuild_cache.dir

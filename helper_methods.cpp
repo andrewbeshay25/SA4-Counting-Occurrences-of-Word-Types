@@ -4,15 +4,21 @@
 #include <cstring>
 #include <cctype>
 #include <algorithm>
+#include <string>
 #include "stats.h"
+#include "helper_methods.h"
 
 using namespace std;
 
 int countWordsInLine(const char *line) {
     int count = 0;
     for (int i = 0; i < strlen(line); i++) {
-        if (line[i] == ' ') count++;
-        if (i == strlen(line) - 1 && line[i] != ' ') count++;
+        if (line[i] == ' ') {
+            count++;
+        }
+        if (i == strlen(line) - 1 && line[i] != ' ') {
+            count++;
+        }
     }
     return count;
 }
@@ -20,20 +26,21 @@ int countWordsInLine(const char *line) {
 void checkSP(const char *charWord, const string &word, Stats &stats) {
     bool allGood = true;
     for (int i = 1; i < word.length(); i++) {
-        if (strchr(".,':;()[]{}#~!?\"", charWord[i])) {
-            cout << "Invalid Special Word at line " << stats.lineCount << ": " << word << endl;
+        if (charWord[i] == '.' || charWord[i] == ',' || charWord[i] == '\'' ||
+            charWord[i] == '\"' || charWord[i] == ':' || charWord[i] == ';' ||
+            charWord[i] == '(' || charWord[i] == ')' || charWord[i] == '[' ||
+            charWord[i] == ']' || charWord[i] == '{' || charWord[i] == '}' ||
+            charWord[i] == '#' || charWord[i] == '~' || charWord[i] == '!' ||
+            charWord[i] == '?' || charWord[i] == '-') {
+
+            if (stats.spFlag) cout << "Invalid Special Word: " << word << endl;
             allGood = false;
             break;
         }
     }
     if (allGood) {
-        if (charWord[0] == '$') {
-            stats.countSP_dol++;
-        } else if (charWord[0] == '%') {
-            stats.countSP_perc++;
-        } else {  // Assuming it's '@'
-            stats.countSP_at++;
-        }
+       stats.countSP++;
+       stats.sp_occurences[word]++;
     }
 }
 
@@ -43,6 +50,7 @@ void checkKW(const string &word, Stats &stats) {
     for (int i = 0; i < 15; i++) {
         if (stats.keyWords[i] == lowerWord) {
             stats.countKW++;
+            stats.kw_occurences[word]++;
         }
     }
 }
@@ -61,7 +69,7 @@ void checkID(const char *charWord, const string &word, Stats &stats) {
     bool allGood = true;
     for (int i = 1; i < word.length(); i++) {
         if (!isalpha(word[i]) && !isdigit(word[i])) {
-            cout << "Invalid Identifier Word at line " << stats.lineCount  << ": " << word << endl;
+            if (stats.idFlag) cout << "Invalid Identifier Word: " << word << endl;
             allGood = false;
             break;
         }
@@ -71,55 +79,62 @@ void checkID(const char *charWord, const string &word, Stats &stats) {
     }
     if (allGood) {
         stats.countID++;
+        stats.id_occurences[word]++;
     }
 }
 
 void classifyWords(const char *line, Stats &stats) {
     string currWord;
+    int currCount = 0;
     int len = strlen(line);
+
     for (int i = 0; i < len; i++) {
         if (line[i] == ' ') {
             if (!currWord.empty()) {
-                if (stats.idFlag && isalpha(currWord[0])) {
+                if ( isalpha(currWord[0])) {
                     checkID(currWord.c_str(), currWord, stats);
                 }
-                if (stats.spFlag && (currWord[0] == '$' || currWord[0] == '@' || currWord[0] == '%')) {
+                if ( (currWord[0] == '$' || currWord[0] == '@' || currWord[0] == '%')) {
                     checkSP(currWord.c_str(), currWord, stats);
                 }
-                if (stats.kwFlag) {
-                    checkKW(currWord, stats);
-                }
+                checkKW(currWord, stats);
+
+                currCount++;
                 currWord = "";
             }
+        } else if (i == len - 1) {
+            currWord += line[i];
+            if ( isalpha(currWord[0])) {
+                checkID(currWord.c_str(), currWord, stats);
+            }
+            if ( (currWord[0] == '$' || currWord[0] == '@' || currWord[0] == '%')) {
+                checkSP(currWord.c_str(), currWord, stats);
+            }
+            checkKW(currWord, stats);
+
+            currCount++;
+            currWord = "";
         } else {
             currWord += line[i];
-        }
-    }
-    // Process the last word if the line doesn't end with a space
-    if (!currWord.empty()) {
-        if (stats.idFlag && isalpha(currWord[0])) {
-            checkID(currWord.c_str(), currWord, stats);
-        }
-        if (stats.spFlag && (currWord[0] == '$' || currWord[0] == '@' || currWord[0] == '%')) {
-            checkSP(currWord.c_str(), currWord, stats);
-        }
-        if (stats.kwFlag) {
-            checkKW(currWord, stats);
         }
     }
 }
 
 int countTotalWords(ifstream *myFile, Stats &stats) {
-    int count = 0;
+    int wordCount = 0;
     string line;
     while (getline(*myFile, line)) {
         stats.lineCount++;
-        classifyWords(line.c_str(), stats);
-
+        const char *words = line.c_str();
+        classifyWords(words, stats);
         for (int i = 0; i < line.length(); i++) {
-            if (line[i] == ' ') count++;
-            if (i == line.length() - 1 && line[i] != ' ') count++;
+            if (line[i] == ' ') {
+                wordCount++;
+            }
+            if (i == line.length() - 1 && line[i] != ' ') {
+                wordCount++;
+            }
         }
     }
-    return count;
+    return wordCount;
 }

@@ -4,7 +4,7 @@
 
 #include <fstream>
 #include <string>
-#include "stats.h"  // For the Stats structure
+#include "stats.h"
 
 int countWordsInLine(const char *line);
 void checkSP(const char *charWord, const std::string &word, Stats &stats);

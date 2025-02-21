@@ -1,12 +1,16 @@
 // main.cpp
 #include <iostream>
 #include <fstream>
+#include <cstring>
+#include <cctype>
+#include <algorithm>
+#include <string>
 #include "stats.h"
-#include "helper_methods.h"  // Make sure your helper methods are declared here
+#include "helper_methods.h"
 
 using namespace std;
 
-int main(int argc, char const *argv[]) {
+int main(int const argc, char const *argv[]) {
     ifstream myInfile;
 
     if (argc < 2) {
@@ -21,12 +25,12 @@ int main(int argc, char const *argv[]) {
         exit(1);
     }
 
-
     Stats stats;
 
     if (argc > 2) {
-        for (int i = 2; i < argc; i++) {
+        for (int i = 2 ; i < argc; i++) {
             string flag = argv[i];
+
             if (flag == "-kw") {
                 stats.kwFlag = true;
             } else if (flag == "-sp") {
@@ -45,21 +49,30 @@ int main(int argc, char const *argv[]) {
         exit(1);
     }
 
-
     const int totalWords = countTotalWords(&myInfile, stats);
-    // cout << "Total Number of Lines:" << stats.lineCount << endl;
-    cout << "Total number of words: " << totalWords << endl;
+    cout << "Total Number of Lines: " << stats.lineCount << endl;
+    cout << "Number of Words: " << totalWords << endl;
+    cout << "Number of Special Words: " << stats.countSP << endl;
+    cout << "Number of Identifiers: " << stats.countID << endl;
+    cout << "Number of Keywords: " << stats.countKW << endl;
 
-    if (stats.kwFlag) {
-        cout << "Number of Keywords: " << stats.countKW << endl;
+    if (stats.spFlag) {
+        cout << endl << "List of Special Words and their number of occurrences:" << endl;
+        for (const auto& specialWord : stats.sp_occurences) {
+            cout << specialWord.first << ": " << specialWord.second << "\n";
+        }
     }
     if (stats.idFlag) {
-        cout << "Number of Identifiers: " << stats.countID << endl;
+        cout << endl << "List of Identiers and their number of occurrences:" << endl;
+        for (const auto& identifier : stats.id_occurences) {
+            cout << identifier.first << ": " << identifier.second << "\n";
+        }
     }
-    if (stats.spFlag) {
-        cout << "Number of Special Words Starting with $: " << stats.countSP_dol << endl;
-        cout << "Number of Special Words Starting with @: " << stats.countSP_at << endl;
-        cout << "Number of Special Words Starting with %: " << stats.countSP_perc << endl;
+    if (stats.kwFlag) {
+        cout << endl << "List of Keywords and their number of occurrences:" << endl;
+        for (const auto& keyword : stats.kw_occurences) {
+            cout << keyword.first << ": " << keyword.second << "\n";
+        }
     }
 
     myInfile.close();

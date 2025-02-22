@@ -1,4 +1,3 @@
-// helper_methods.h
 #ifndef HELPER_METHODS_H
 #define HELPER_METHODS_H
 

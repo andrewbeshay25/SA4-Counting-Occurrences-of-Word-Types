@@ -1,8 +1,8 @@
-// helper_methods.cpp
 #include <iostream>
 #include <fstream>
 #include <cstring>
 #include <cctype>
+#include <sstream>
 #include <algorithm>
 #include <string>
 #include "stats.h"
@@ -48,9 +48,12 @@ void checkKW(const string &word, Stats &stats) {
     string lowerWord = word;
     transform(lowerWord.begin(), lowerWord.end(), lowerWord.begin(), ::tolower);
     for (int i = 0; i < 15; i++) {
-        if (stats.keyWords[i] == lowerWord) {
+
+        string loweredKeyword = stats.keyWords[i];
+        transform(loweredKeyword.begin(), loweredKeyword.end(), loweredKeyword.begin(), ::tolower);
+        if (loweredKeyword == lowerWord) {
             stats.countKW++;
-            stats.kw_occurences[word]++;
+            stats.kw_occurences[lowerWord]++;
         }
     }
 }
@@ -91,26 +94,27 @@ void classifyWords(const char *line, Stats &stats) {
     for (int i = 0; i < len; i++) {
         if (line[i] == ' ') {
             if (!currWord.empty()) {
+                checkKW(currWord, stats);
                 if ( isalpha(currWord[0])) {
                     checkID(currWord.c_str(), currWord, stats);
                 }
                 if ( (currWord[0] == '$' || currWord[0] == '@' || currWord[0] == '%')) {
                     checkSP(currWord.c_str(), currWord, stats);
                 }
-                checkKW(currWord, stats);
 
                 currCount++;
                 currWord = "";
             }
         } else if (i == len - 1) {
             currWord += line[i];
+
+            checkKW(currWord, stats);
             if ( isalpha(currWord[0])) {
                 checkID(currWord.c_str(), currWord, stats);
             }
             if ( (currWord[0] == '$' || currWord[0] == '@' || currWord[0] == '%')) {
                 checkSP(currWord.c_str(), currWord, stats);
             }
-            checkKW(currWord, stats);
 
             currCount++;
             currWord = "";
@@ -125,15 +129,11 @@ int countTotalWords(ifstream *myFile, Stats &stats) {
     string line;
     while (getline(*myFile, line)) {
         stats.lineCount++;
-        const char *words = line.c_str();
-        classifyWords(words, stats);
-        for (int i = 0; i < line.length(); i++) {
-            if (line[i] == ' ') {
-                wordCount++;
-            }
-            if (i == line.length() - 1 && line[i] != ' ') {
-                wordCount++;
-            }
+        istringstream iss(line);
+        string word;
+        while (iss >> word) {
+            wordCount++;
+            classifyWords(word.c_str(), stats);
         }
     }
     return wordCount;
